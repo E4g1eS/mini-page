@@ -4,7 +4,7 @@
 
 ### First time setup:
 
-1. Install Python 3.
+1. Install Python 3 (with the `venv` package).
 1. Create virtual environment `python3 -m venv some/path`.
 1. Activate virtual environemt `source some/path/bin/activate` or similar for Windows.
 1. (Optional) Update pip with `pip install --upgrade pip`.
