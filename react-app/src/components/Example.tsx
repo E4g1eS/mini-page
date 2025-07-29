@@ -8,7 +8,7 @@ function Example() {
       <header className="Example-header">
         <img src={logo} className="Example-logo" alt="logo" />
         <p>
-          Edit <code>src/components/Example.tsx</code> and save to reload.
+          Edit <code>src/components/Example.tsx</code> and save to reload...
         </p>
         <a
           className="Example-link"
