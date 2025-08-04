@@ -25,6 +25,8 @@ export const RTC_CONFIG: RTCConfiguration = {
     ],
 };
 
+let DATA_CHANNEL = null as RTCDataChannel | null;
+
 let SERVER_CONNECTION : RTCPeerConnection | null = null;
 
 function startServer() {
@@ -45,6 +47,15 @@ function startServer() {
         console.log('Created offer:', offerString);
         alert(offerString);
     });
+
+    DATA_CHANNEL = SERVER_CONNECTION.createDataChannel("binaryData", {
+        ordered: false, // Ensures messages are delivered in order
+    });
+
+    DATA_CHANNEL.addEventListener("open", () => {
+        console.log("Data channel is open");
+        DATA_CHANNEL!.send("Hello from the server!");
+    });
 }
 
 let CLIENT_CONNECTION : RTCPeerConnection | null = null;
@@ -60,6 +71,13 @@ function connectToServer(remoteDescription: RTCSessionDescriptionInit) {
         const answerString = JSON.stringify(answer);
         console.log('Created answer:', answerString);
         alert(answerString);
+    });
+
+    CLIENT_CONNECTION.addEventListener("datachannel", (event) => {
+        DATA_CHANNEL = event.channel;
+        DATA_CHANNEL.addEventListener("message", (event) => {
+            console.log("Received message:", event.data);
+        });
     });
 }
 
