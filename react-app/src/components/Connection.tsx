@@ -1,7 +1,6 @@
 import React from "react";
 import "./Connection.css";
-import { clearInterval } from "timers";
-import { error } from "console";
+import { generateRandomString } from "../func/utils";
 
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
@@ -33,28 +32,18 @@ const RTC_API_URL = process.env.REACT_APP_WEBRTC_URL;
 
 const REQUEST_REPEAT_TIMEOUT = 5000;
 
-function generateRandomString(length: number): string {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-}
-
 enum LogSeverity {
-  DEBUG = "DEBUG",
+  VERBOSE = "VERBOSE",
   INFO = "INFO",
   WARNING = "WARNING",
   ERROR = "ERROR",
 }
 
-function log(text: string, severity: LogSeverity = LogSeverity.DEBUG) {
+function log(text: string, severity: LogSeverity = LogSeverity.VERBOSE) {
   const logText = `[${new Date().toISOString()}] [${severity}] ${text}`;
 
   switch (severity) {
-    case LogSeverity.DEBUG:
+    case LogSeverity.VERBOSE:
       console.debug(logText);
       break;
     case LogSeverity.INFO:
@@ -80,7 +69,7 @@ class Peer {
   localName: string | null = null;
   remoteName: string | null = null;
 
-  timerForGettingIceCandidates: NodeJS.Timer | null = null;
+  timerForGettingIceCandidates: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.connection = new RTCPeerConnection(RTC_CONFIG);
@@ -103,28 +92,37 @@ class Peer {
 
   iceCandidateDiscovered(iceEvent: RTCPeerConnectionIceEvent) {
     if (iceEvent.candidate) {
-      log(
-        `New ICE candidate: ${JSON.stringify(iceEvent.candidate)}`,
-        LogSeverity.INFO
-      );
+      const fetchBody = JSON.stringify({
+        messageType: "candidate",
+        peerName: this.localName,
+        payload: JSON.stringify(iceEvent.candidate),
+      });
+      log(`New ICE candidate: ${fetchBody}`, LogSeverity.INFO);
       fetch(`${RTC_API_URL}/webrtc`, {
         method: "POST",
-        body: JSON.stringify({
-          messageType: "candidate",
-          peer_name: this.localName,
-          payload: iceEvent.candidate,
-        }),
-      }).catch((error) => {
-        log(`Error sending ICE candidate: ${error}`, LogSeverity.ERROR);
-      });
+        headers: {
+          "Content-Type": "application/json", // Indicate JSON body
+        },
+        body: fetchBody,
+      }).then(
+        () => {
+          log("ICE candidate sent successfully.", LogSeverity.INFO);
+        },
+        (error) => {
+          log(`Error sending ICE candidate: ${error}`, LogSeverity.ERROR);
+        }
+      );
     } else {
       log("All ICE candidates have been discovered.", LogSeverity.INFO);
       fetch(`${RTC_API_URL}/webrtc`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json", // Indicate JSON body
+        },
         body: JSON.stringify({
           messageType: "candidate",
-          peer_name: this.localName,
-          payload: { end: true },
+          peerName: this.localName,
+          payload: "end",
         }),
       }).catch((error) => {
         log(`Error ICE candidate stop: ${error}`, LogSeverity.ERROR);
@@ -149,6 +147,7 @@ class Peer {
     fetch(`${RTC_API_URL}/webrtc/ice_candidates`, {
       method: "GET",
       headers: {
+        "Content-Type": "application/json", // Indicate JSON body
         peerName: this.remoteName,
       },
     })
@@ -162,14 +161,19 @@ class Peer {
         }
 
         response.json().then((data) => {
-          data.candidates.forEach((candidate: RTCIceCandidateInit) => {
-            if (Object.hasOwn(candidate, "end")) {
+          log(
+            `Received candidate data: ${JSON.stringify(data)}`,
+            LogSeverity.VERBOSE
+          );
+          data.candidates.forEach((candidate: string) => {
+            if (candidate === "end") {
               log("No more ICE candidates to add.", LogSeverity.INFO);
               clearInterval(this.timerForGettingIceCandidates!);
               return;
             }
 
-            this.connection.addIceCandidate(candidate).then(
+            const candidateObj = JSON.parse(candidate);
+            this.connection.addIceCandidate(candidateObj).then(
               () => {
                 log(
                   `Remote ICE candidate added: ${JSON.stringify(candidate)}`,
@@ -190,7 +194,7 @@ class Peer {
 }
 
 class Host extends Peer {
-  timerForGettingAnswer: NodeJS.Timer | null = null;
+  timerForGettingAnswer: ReturnType<typeof setInterval> | null = null;
 
   constructor(hostName: string) {
     super();
@@ -217,6 +221,8 @@ class Host extends Peer {
       );
       this.unorderedData!.send("Hello from the host (unordered)!");
     });
+
+    this.createOffer();
   }
 
   createOffer() {
@@ -231,18 +237,38 @@ class Host extends Peer {
           }
         );
 
-        const offerString = JSON.stringify(offer);
-        log(`Created offer: ${offerString}`, LogSeverity.INFO);
+        const fetchBody = JSON.stringify({
+          messageType: "offer",
+          peerName: this.localName,
+          payload: JSON.stringify(offer),
+        });
+        log(`Created offer: ${fetchBody}`, LogSeverity.INFO);
+
         fetch(`${RTC_API_URL}/webrtc`, {
           method: "POST",
-          body: JSON.stringify({
-            messageType: "offer",
-            peerName: this.localName,
-            payload: offer,
-          }),
-        }).catch((error) => {
-          log(`Error sending offer: ${error}`, LogSeverity.ERROR);
-        });
+          headers: {
+            "Content-Type": "application/json", // Indicate JSON body
+          },
+          body: fetchBody,
+        }).then(
+          (response) => {
+            if (!response.ok) {
+              log(
+                `Error sending offer: ${response.statusText}`,
+                LogSeverity.ERROR
+              );
+              return;
+            }
+            response.json().then((data) => {
+              this.remoteName = data.clientName;
+              log(`Remote name set to: ${this.remoteName}`, LogSeverity.INFO);
+            });
+            log("Offer sent successfully.", LogSeverity.INFO);
+          },
+          (error) => {
+            log(`Error sending offer: ${error}`, LogSeverity.ERROR);
+          }
+        );
       },
       (error) => {
         log(`Error creating offer: ${error}`, LogSeverity.ERROR);
@@ -264,7 +290,8 @@ class Host extends Peer {
     fetch(`${RTC_API_URL}/webrtc/answer`, {
       method: "GET",
       headers: {
-        peer_name: this.remoteName,
+        "Content-Type": "application/json", // Indicate JSON body
+        peerName: this.remoteName,
       },
     }).then(
       (response) => {
@@ -277,7 +304,17 @@ class Host extends Peer {
         }
 
         response.json().then((data) => {
-          this.connection.setRemoteDescription(data.answer).then(
+          log(
+            `Received answer data: ${JSON.stringify(data)}`,
+            LogSeverity.VERBOSE
+          );
+
+          if (data.answer === null) {
+            // Not an error, client has not sent an answer yet
+            return;
+          }
+
+          this.connection.setRemoteDescription(JSON.parse(data.answer)).then(
             () => {
               log("Remote description set successfully.", LogSeverity.INFO);
               if (this.timerForGettingAnswer === null) return;
@@ -312,7 +349,8 @@ class Client extends Peer {
     fetch(`${RTC_API_URL}/webrtc/offer`, {
       method: "GET",
       headers: {
-        peer_name: this.remoteName,
+        "Content-Type": "application/json", // Indicate JSON body
+        peerName: this.remoteName,
       },
     }).then(
       (response) => {
@@ -325,7 +363,7 @@ class Client extends Peer {
         }
         response.json().then((data) => {
           this.localName = data.clientName;
-          this.connection.setRemoteDescription(data.offer).then(
+          this.connection.setRemoteDescription(JSON.parse(data.offer)).then(
             () => {
               log("Remote description set successfully.", LogSeverity.INFO);
             },
@@ -357,14 +395,34 @@ class Client extends Peer {
 
         fetch(`${RTC_API_URL}/webrtc`, {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json", // Indicate JSON body
+          },
           body: JSON.stringify({
             messageType: "answer",
-            peerName: this.localName,
-            payload: answer,
+            peerName: this.remoteName,
+            payload: JSON.stringify(answer),
           }),
-        }).catch((error) => {
-          log(`Error sending answer: ${error}`, LogSeverity.ERROR);
-        });
+        }).then(
+          (response) => {
+            if (!response.ok) {
+              log(
+                `Error sending answer: ${response.statusText}`,
+                LogSeverity.ERROR
+              );
+              return;
+            }
+            response.json().then((data) => {
+              log(
+                `Answer sent successfully. Success: ${data.success}`,
+                LogSeverity.INFO
+              );
+            });
+          },
+          (error) => {
+            log(`Error sending answer: ${error}`, LogSeverity.ERROR);
+          }
+        );
       },
       (error) => {
         log(`Error creating answer: ${error}`, LogSeverity.ERROR);

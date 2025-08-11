@@ -1,9 +1,23 @@
 from fastapi import FastAPI, Header
 from pydantic import BaseModel
 from enum import Enum, IntEnum
+from fastapi.middleware.cors import CORSMiddleware
 import json
 
 app = FastAPI()
+
+ORIGINS = [
+    "http://localhost:3000",
+    # You can add other origins here if needed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ORIGINS,           # Allow only this origin(s)
+    allow_credentials=True,
+    allow_methods=["*"],             # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],             # Allow all headers
+)
 
 @app.get("/")
 async def root():
@@ -24,16 +38,19 @@ def return_success(data: dict | None = None):
 class Connection:
     host_name: str
     offer: dict
-    host_ice_candidates: list[dict] = []
+    host_ice_candidates: list[str] = []
 
     client_name: str | None = None
     answer: dict | None = None
-    client_ice_candidates: list[dict] = []
+    client_ice_candidates: list[str] = []
 
-    def __init__(self, host_name: str, offer: dict):
+    def __init__(self, host_name: str, offer: str):
         self.host_name = host_name
         self.offer = offer
-        self.client_name = self.generate_client_name(host_name)
+        self.client_name = self.generate_client_name()
+
+    def __str__(self):
+        return json.dumps(self.__dict__)
 
     def generate_client_name(self) -> str:
         """
@@ -43,6 +60,16 @@ class Connection:
 
 CONNECTIONS: list[Connection] = list()
 
+@app.get("/reset")
+async def reset():
+    global CONNECTIONS
+    CONNECTIONS = list()  # Reset the connections list
+    return return_success({"message": "Resetting connections."})
+
+@app.get("/data")
+async def data():
+    return return_success({"message": [connection for connection in CONNECTIONS]})
+
 class MessageType(str, Enum):
     offer = 'offer'
     answer = 'answer'
@@ -51,7 +78,7 @@ class MessageType(str, Enum):
 class WebRTCData(BaseModel):
     messageType: MessageType
     peerName: str
-    payload: dict
+    payload: str
 
 @app.post("/webrtc")
 async def webrtc_handler(data: WebRTCData):
@@ -92,40 +119,40 @@ async def webrtc_handler(data: WebRTCData):
     return return_error("Unknown message type")
 
 @app.get("/webrtc/ice_candidates")
-async def get_ice_candidates(peer_name: str = Header(None)):
-    if peer_name is None:
+async def get_ice_candidates(peerName: str = Header(None)):
+    if peerName is None:
         return return_error("Missing 'peer-name' header in WebRTC request")
 
     for connection in CONNECTIONS:
-        if connection.host_name == peer_name:
+        if connection.host_name == peerName:
             ice_candidates = connection.host_ice_candidates
             connection.host_ice_candidates = list()  # Clear after fetching
-            return return_success({"iceCandidates": ice_candidates})
-        elif connection.client_name == peer_name:
+            return return_success({"candidates": ice_candidates})
+        elif connection.client_name == peerName:
             ice_candidates = connection.client_ice_candidates
             connection.client_ice_candidates = list()  # Clear after fetching
-            return return_success({"iceCandidates": ice_candidates})
+            return return_success({"candidates": ice_candidates})
 
     return return_error("Peer not found")
 
 @app.get("/webrtc/offer")
-async def get_offer(peer_name: str = Header(None)):
-    if peer_name is None:
+async def get_offer(peerName: str = Header(None)):
+    if peerName is None:
         return return_error("Missing 'peer-name' header in WebRTC request")
 
     for connection in CONNECTIONS:
-        if connection.host_name == peer_name:
+        if connection.host_name == peerName:
             return return_success({"offer": connection.offer, "clientName": connection.client_name})
 
     return return_error("Host not found")
 
 @app.get("/webrtc/answer")
-async def get_answer(peer_name: str = Header(None)):
-    if peer_name is None:
+async def get_answer(peerName: str = Header(None)):
+    if peerName is None:
         return return_error("Missing 'peer-name' header in WebRTC request")
 
     for connection in CONNECTIONS:
-        if connection.client_name == peer_name:
+        if connection.client_name == peerName:
             return return_success({"answer": connection.answer})
 
     return return_error("Client not found")
