@@ -83,11 +83,6 @@ class Peer {
       "icecandidate",
       this.iceCandidateDiscovered.bind(this)
     );
-
-    this.timerForGettingIceCandidates = setInterval(
-      this.getRemoteIceCandidates.bind(this),
-      REQUEST_REPEAT_TIMEOUT
-    );
   }
 
   iceCandidateDiscovered(iceEvent: RTCPeerConnectionIceEvent) {
@@ -136,6 +131,13 @@ class Peer {
 
   handleUnorderedDataChannel(event: MessageEvent) {
     log(`Received unordered message: ${event.data}`, LogSeverity.INFO);
+  }
+
+  startGettingIceCandidates() {
+    this.timerForGettingIceCandidates = setInterval(
+      this.getRemoteIceCandidates.bind(this),
+      REQUEST_REPEAT_TIMEOUT
+    );
   }
 
   getRemoteIceCandidates() {
@@ -319,6 +321,7 @@ class Host extends Peer {
               log("Remote description set successfully.", LogSeverity.INFO);
               if (this.timerForGettingAnswer === null) return;
               clearInterval(this.timerForGettingAnswer);
+              this.startGettingIceCandidates();
             },
             (error) => {
               log(
@@ -366,6 +369,7 @@ class Client extends Peer {
           this.connection.setRemoteDescription(JSON.parse(data.offer)).then(
             () => {
               log("Remote description set successfully.", LogSeverity.INFO);
+              this.startGettingIceCandidates();
             },
             (error) => {
               log(
