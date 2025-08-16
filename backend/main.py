@@ -153,6 +153,9 @@ async def get_answer(peerName: str = Header(None)):
 
     for connection in CONNECTIONS:
         if connection.client_name == peerName:
-            return return_success({"answer": connection.answer})
+            if connection.answer is not None:
+                return return_success({"answer": connection.answer})
+            else:
+                return return_error("Client not connected yet")
 
     return return_error("Client not found")

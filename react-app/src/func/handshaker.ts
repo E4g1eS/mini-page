@@ -52,6 +52,11 @@ export interface Handshaker {
   ): void;
 }
 
+/** Edit to return currently used handshaker */
+export function getHandshaker(): Handshaker {
+  return new HttpHandshaker();
+}
+
 class HttpHandshaker implements Handshaker {
   private readonly API_URL = process.env.REACT_APP_WEBRTC_URL;
   /** In miliseconds. */
@@ -76,6 +81,8 @@ class HttpHandshaker implements Handshaker {
       })
     ).json();
     if (!offerResponse.success) throw new Error("Failed to send offer.");
+
+    log(`Successfully sent offer`);
 
     while (true) {
       const answerResponse = await (
@@ -121,7 +128,7 @@ class HttpHandshaker implements Handshaker {
     answer: RTCSessionDescriptionInit
   ): Promise<void> {
     const response = await (
-      await fetch(`${this.API_URL}/webrtc/answer`, {
+      await fetch(`${this.API_URL}/webrtc`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -194,6 +201,7 @@ class HttpHandshaker implements Handshaker {
         candidateListener(candidate);
       }
 
+      log("Waiting for ICE candidates...", LogSeverity.VERBOSE);
       await sleep(this.REQUEST_REPEAT_TIMEOUT);
     }
   }
