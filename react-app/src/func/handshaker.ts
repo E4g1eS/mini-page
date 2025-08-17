@@ -6,6 +6,10 @@ export interface DescriptionWithPeerName {
   peerName: string;
 }
 
+/**
+ * Interface for any server (HTTP/HTTPS/WebSocket)
+ * that implements the initial RTC handshake.
+ */
 export interface Handshaker {
   /**
    * The command to "start" a host.
@@ -25,7 +29,7 @@ export interface Handshaker {
   getOffer(hostName: string): Promise<DescriptionWithPeerName>;
 
   /**
-   * The command to send an answer to the host.
+   * The command to send an answer from client to the host.
    */
   sendAnswer(
     hostName: string,
@@ -33,6 +37,7 @@ export interface Handshaker {
   ): Promise<void>;
 
   /**
+   * The command to send a local ICE candidate.
    * @param selfName The name of the peer sending the ICE candidate.
    * @param candidate The ICE candidate to send. If null, it indicates the end of candidates.
    */
