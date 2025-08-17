@@ -43,13 +43,14 @@ export interface Handshaker {
 
   /**
    * Registers a listener for incoming ICE candidates.
+   * Resolves when all ICE candidates have been received.
    * @param peerName The name of the peer to listen for candidates from.
    * @param candidateListener The function to call when a candidate is received.
    */
   registerIceCandidateListener(
     peerName: string,
     candidateListener: (candidate: RTCIceCandidateInit) => void
-  ): void;
+  ): Promise<void>;
 }
 
 /** Edit to return currently used handshaker */
@@ -161,27 +162,10 @@ class HttpHandshaker implements Handshaker {
     if (!response.success) throw new Error("Failed to send ice candidate.");
   }
 
-  registerIceCandidateListener(
+  async registerIceCandidateListener(
     peerName: string,
     candidateListener: (candidate: RTCIceCandidateInit) => void
-  ): void {
-    this.listenToIceCandidates(peerName, candidateListener).then(
-      () => {
-        log("End of listening to ICE candidates.", LogSeverity.INFO);
-      },
-      (error) => {
-        log(
-          `Error while listening to ICE candidates: ${error}`,
-          LogSeverity.ERROR
-        );
-      }
-    );
-  }
-
-  private async listenToIceCandidates(
-    peerName: string,
-    candidateListener: (candidate: RTCIceCandidateInit) => void
-  ) {
+  ): Promise<void> {
     while (true) {
       const response = await (
         await fetch(`${this.API_URL}/webrtc/ice_candidates`, {

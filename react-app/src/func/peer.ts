@@ -40,12 +40,10 @@ export class Peer {
         );
         return;
       }
-
-      log(
-        `A local ICE candidate found: ${JSON.stringify(iceEvent.candidate)}`,
-        LogSeverity.VERBOSE
-      );
-
+      if (iceEvent.candidate)
+        log(`A local ICE candidate found.`, LogSeverity.VERBOSE);
+      else
+        log(`All local ICE candidates have been found.`, LogSeverity.VERBOSE);
       this.handshaker.sendIceCandidate(this.localName, iceEvent.candidate);
     });
   }
@@ -69,7 +67,7 @@ export class Peer {
     if (!this.remoteName)
       throw new Error("Remote name is not set. Cannot get ICE candidates.");
 
-    this.handshaker.registerIceCandidateListener(
+    await this.handshaker.registerIceCandidateListener(
       this.remoteName,
       (candidate) => {
         this.connection.addIceCandidate(candidate).then(
