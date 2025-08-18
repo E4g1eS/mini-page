@@ -35,7 +35,7 @@ export function GameCanvas() {
 
   return (
     <div className="GameCanvas">
-      <canvas id="gameCanvas" className="gameCanvas"></canvas>
+      <canvas id="gameCanvas" className="gameCanvas" width="800" height="800"></canvas>
     </div>
   );
 }

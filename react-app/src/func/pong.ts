@@ -1,6 +1,6 @@
 import React from "react";
 
-import * as Math from "./math";
+import * as QM from "./math";
 import { Peer } from "./peer";
 import { createScopedLog, LogSeverity } from "./logging";
 
@@ -10,19 +10,19 @@ const log = createScopedLog("Pong");
 
 class Player {
   /** How high the player is, zero is middle */
-  yPosition = 0;
+  yPosition = 0.5;
 }
 
 class Ball {
-  position = Math.Vec2.zero();
+  position = new QM.Vec2(0.5, 0.5);
   /** Per second */
-  speed = 5;
+  speed = 0.01;
 }
 
 export class Pong {
-  private readonly DISTANCE_BETWEEN_PLAYERS = 100;
-  private readonly BALL_SIZE = 5;
-  private readonly PADDLE_SIZE = new Math.Vec2(2, 10);
+  readonly DISTANCE_BETWEEN_PLAYERS = 0.8;
+  readonly BALL_SIZE = 0.05;
+  readonly PADDLE_SIZE = new QM.Vec2(0.05, 0.5);
 
   peer: Peer | null;
 
