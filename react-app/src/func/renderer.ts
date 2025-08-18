@@ -26,19 +26,21 @@ export class PongRenderer implements Renderer {
     this.ctx = canvas.getContext("2d");
     if (!this.ctx)
       throw new Error("Canvas could not get 2D context.");
+
+    log("Renderer initialized.", LogSeverity.INFO);
   }
 
   renderFrame() {
     if (!this.pong || !this.ctx)
       throw new Error("Renderer is not initialized.");
 
-    const startTime = performance.now();
+    //const startTime = performance.now();
 
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.renderPong();
 
-    const endTime = performance.now();
-    log(`Frame rendered in ${endTime - startTime} ms.`, LogSeverity.VERBOSE);
+    //const endTime = performance.now();
+    //log(`Frame rendered in ${endTime - startTime} ms.`, LogSeverity.VERBOSE);
 
     requestAnimationFrame(this.renderFrame.bind(this));
   }
