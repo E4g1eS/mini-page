@@ -7,3 +7,7 @@ export function generateRandomString(length: number): string {
   }
   return result;
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
