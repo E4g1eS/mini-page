@@ -4,12 +4,12 @@ import "./GameCanvas.css";
 
 import { createScopedLog, LogSeverity } from "../func/logging";
 import { PongContext } from "../func/pong";
-import { Renderer } from "../func/renderer";
+import { PongRenderer } from "../func/renderer";
 import { getTypedElementById, sleep } from "../func/utils";
 
 const log = createScopedLog("GameCanvas");
 
-async function getGameCanvas(): Promise<HTMLCanvasElement> {
+export async function getGameCanvas(): Promise<HTMLCanvasElement> {
   const WAIT_FOR_CANVAS_DELAY = 1000;
 
   while (true) {
@@ -24,15 +24,6 @@ async function getGameCanvas(): Promise<HTMLCanvasElement> {
 }
 
 export function GameCanvas() {
-  const pong = React.useContext(PongContext);
-  const renderer = new Renderer();
-  renderer.startRendering(pong, getGameCanvas()).catch((error) => {
-    log(
-      `Did not finish rendering gracefully because of: ${error}`,
-      LogSeverity.ERROR
-    );
-  });
-
   return (
     <div className="GameCanvas">
       <canvas id="gameCanvas" className="gameCanvas" width="800" height="800"></canvas>

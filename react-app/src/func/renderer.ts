@@ -1,4 +1,4 @@
-import { Pong } from "./pong";
+import { Scene, PongScene } from "./pong";
 import { createScopedLog, LogSeverity } from "./logging";
 import * as QM from "./math";
 
@@ -6,27 +6,29 @@ import * as QM from "./math";
 
 const log = createScopedLog("Renderer");
 
-export class Renderer {
-  pong: Pong | null = null;
+export interface Renderer {
+  init: (scene: Scene, canvas: HTMLCanvasElement) => Promise<void>;
+  renderFrame: () => void;
+  shutdown: () => void;
+}
+
+export class PongRenderer implements Renderer {
+  pong: PongScene | null = null;
   ctx: CanvasRenderingContext2D | null = null;
 
   private stopped = false;
 
-  async startRendering(pong: Pong, canvasPromise: Promise<HTMLCanvasElement>) {
-    this.pong = pong;
-    this.ctx = (await canvasPromise).getContext("2d");
+  async init (scene: Scene, canvas: HTMLCanvasElement) {
+    if (!(scene instanceof PongScene))
+      throw new Error("PongRenderer can only render PongScene.");
+    this.pong = scene;
 
+    this.ctx = canvas.getContext("2d");
     if (!this.ctx)
-      throw new Error("Renderer could not get 2D context from canvas.");
-
-    requestAnimationFrame(this.renderFrame.bind(this));
+      throw new Error("Canvas could not get 2D context.");
   }
 
-  stopRendering() {
-    this.stopped = true;
-  }
-
-  private renderFrame() {
+  renderFrame() {
     if (!this.pong || !this.ctx)
       throw new Error("Renderer is not initialized.");
 
@@ -39,6 +41,10 @@ export class Renderer {
     log(`Frame rendered in ${endTime - startTime} ms.`, LogSeverity.VERBOSE);
 
     requestAnimationFrame(this.renderFrame.bind(this));
+  }
+
+  shutdown() {
+    this.stopped = true;
   }
 
   /**
