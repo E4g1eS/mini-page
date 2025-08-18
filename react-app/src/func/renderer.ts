@@ -16,18 +16,15 @@ export class PongRenderer implements Renderer {
   pong: PongScene | null = null;
   ctx: CanvasRenderingContext2D | null = null;
 
-  private stopped = false;
-
-  async init (scene: Scene, canvas: HTMLCanvasElement) {
+  async init(scene: Scene, canvas: HTMLCanvasElement) {
     if (!(scene instanceof PongScene))
       throw new Error("PongRenderer can only render PongScene.");
     this.pong = scene;
 
     this.ctx = canvas.getContext("2d");
-    if (!this.ctx)
-      throw new Error("Canvas could not get 2D context.");
+    if (!this.ctx) throw new Error("Canvas could not get 2D context.");
 
-    log("Renderer initialized.", LogSeverity.INFO);
+    log("Initialized.", LogSeverity.INFO);
   }
 
   renderFrame() {
@@ -41,13 +38,9 @@ export class PongRenderer implements Renderer {
 
     //const endTime = performance.now();
     //log(`Frame rendered in ${endTime - startTime} ms.`, LogSeverity.VERBOSE);
-
-    requestAnimationFrame(this.renderFrame.bind(this));
   }
 
-  shutdown() {
-    this.stopped = true;
-  }
+  shutdown() {}
 
   /**
    * Converts relative size (0-1 in respect to canvas size) into absolute pixel size.
