@@ -8,6 +8,16 @@ export function generateRandomString(length: number): string {
   return result;
 }
 
-export function sleep(ms: number): Promise<void> {
+export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function getTypedElementById<ElementType extends HTMLElement>(
+  id: string,
+  cnstrctr: new () => ElementType
+): ElementType | null {
+  const htmlElement = document.getElementById(id);
+  if (!htmlElement) return null;
+  if (!(htmlElement instanceof cnstrctr)) return null;
+  return htmlElement;
 }

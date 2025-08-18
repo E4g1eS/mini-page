@@ -5,6 +5,8 @@ import { generateRandomString } from "../func/utils";
 import { log, LogSeverity } from "../func/logging";
 import { Host, Client } from "../func/peer";
 
+import { ConnectionContext } from "../func/connectionContext";
+
 function getServerName(): string {
   const serverNameInput = document.getElementById("serverNameInput");
   if (!serverNameInput || !(serverNameInput instanceof HTMLInputElement)) {
@@ -18,8 +20,8 @@ function getServerName(): string {
   return serverNameInput.value.trim();
 }
 
-function Connection() {
-  const [peer, setPeer] = React.useState<Host | Client | null>(null);
+export function Connection() {
+  const { peer, setPeer } = React.useContext(ConnectionContext);
 
   return (
     <div className="Connection">
@@ -46,5 +48,3 @@ function Connection() {
     </div>
   );
 }
-
-export default Connection;

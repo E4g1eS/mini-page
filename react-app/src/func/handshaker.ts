@@ -1,5 +1,7 @@
-import { log, LogSeverity } from "./logging";
+import { createScopedLog, LogSeverity } from "./logging";
 import { sleep } from "./utils";
+
+const log = createScopedLog("Handshaker");
 
 export interface DescriptionWithPeerName {
   description: RTCSessionDescriptionInit;
@@ -88,7 +90,7 @@ class HttpHandshaker implements Handshaker {
     ).json();
     if (!offerResponse.success) throw new Error("Failed to send offer.");
 
-    log(`Successfully sent offer`);
+    log(`Successfully sent offer`, LogSeverity.VERBOSE);
 
     while (true) {
       const answerResponse = await (
