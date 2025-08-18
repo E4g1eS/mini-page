@@ -1,14 +1,12 @@
-import React from 'react';
-import './Main.css';
+import React from "react";
+import "./Main.css";
 
-import Connection from './Connection';
+import { Game } from "./Game";
 
-function Main() {
+export function Main() {
   return (
     <div className="Main">
-        <Connection />
+      <Game />
     </div>
   );
 }
-
-export default Main;

@@ -1,5 +1,7 @@
-import { log, LogSeverity } from "./logging";
+import { createScopedLog, LogSeverity } from "./logging";
 import { Handshaker, getHandshaker } from "./handshaker";
+
+const log = createScopedLog("Peer");
 
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
@@ -200,3 +202,5 @@ export class Client extends Peer {
     }
   }
 }
+
+export type PeerType = null | Host | Client;
