@@ -1,5 +1,7 @@
 import React from "react";
 
+import "./GameCanvas.css";
+
 import { createScopedLog, LogSeverity } from "../func/logging";
 import { PongContext } from "../func/pong";
 import { Renderer } from "../func/renderer";
@@ -12,7 +14,10 @@ async function getGameCanvas(): Promise<HTMLCanvasElement> {
 
   while (true) {
     const canvas = getTypedElementById("gameCanvas", HTMLCanvasElement);
-    if (canvas) return canvas;
+    if (canvas) {
+      log(`Successfully found game canvas.`, LogSeverity.INFO);
+      return canvas;
+    }
 
     await sleep(WAIT_FOR_CANVAS_DELAY);
   }
