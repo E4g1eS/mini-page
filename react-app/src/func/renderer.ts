@@ -1,4 +1,4 @@
-import { Scene, PongScene } from "./pong";
+import { Scene, PongScene } from "./scene";
 import { createScopedLog, LogSeverity } from "./logging";
 import * as QM from "./math";
 
@@ -10,6 +10,12 @@ export interface Renderer {
   init: (scene: Scene, canvas: HTMLCanvasElement) => Promise<void>;
   renderFrame: () => void;
   shutdown: () => void;
+}
+
+export class EmptyRenderer implements Renderer {
+  async init(scene: Scene, canvas: HTMLCanvasElement) {}
+  renderFrame() {}
+  shutdown() {}
 }
 
 export class PongRenderer implements Renderer {

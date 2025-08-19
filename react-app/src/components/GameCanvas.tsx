@@ -3,8 +3,6 @@ import React from "react";
 import "./GameCanvas.css";
 
 import { createScopedLog, LogSeverity } from "../func/logging";
-import { PongContext } from "../func/pong";
-import { PongRenderer } from "../func/renderer";
 import { getTypedElementById, sleep } from "../func/utils";
 
 const log = createScopedLog("GameCanvas");
