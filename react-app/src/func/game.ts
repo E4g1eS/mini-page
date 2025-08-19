@@ -8,7 +8,6 @@ import { UserInput } from "./input";
 
 const log = createScopedLog("Game");
 
-/** Singleton */
 export class Game {
   scene: Scene;
   renderer: Renderer;
