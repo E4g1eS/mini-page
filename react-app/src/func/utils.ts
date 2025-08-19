@@ -26,17 +26,19 @@ export function getTypedElementById<ElementType extends HTMLElement>(
   return htmlElement;
 }
 
-export function getTypedElementsByClass<ElementType extends HTMLElement>(
+export function getTypedElementByClass<ElementType extends HTMLElement>(
   cls: string,
   cnstrctr: new () => ElementType
 ): ElementType | null {
   const htmlElements = document.getElementsByClassName(cls);
-  
-  if (htmlElements.length === 0)
-      return null;
+
+  if (htmlElements.length === 0) return null;
 
   if (htmlElements.length > 1)
-    log(`Multiple elements with classname "${cls}" are present.`, LogSeverity.WARNING);
+    log(
+      `Multiple elements with classname "${cls}" are present.`,
+      LogSeverity.WARNING
+    );
 
   const htmlElement = htmlElements[0];
   if (!(htmlElement instanceof cnstrctr)) return null;

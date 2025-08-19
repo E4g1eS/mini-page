@@ -1,5 +1,3 @@
-import React from "react";
-
 import * as QM from "./math";
 import { Peer } from "./peer";
 import { createScopedLog, LogSeverity } from "./logging";
