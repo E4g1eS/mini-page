@@ -1,12 +1,12 @@
 import React from "react";
 import "./Main.css";
 
-import { Game } from "./Game";
+import { GameContainer } from "./GameContainer";
 
 export function Main() {
   return (
     <div className="Main">
-      <Game />
+      <GameContainer />
     </div>
   );
 }

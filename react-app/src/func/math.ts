@@ -7,6 +7,10 @@ export class Vec2 {
     this.y = y;
   }
 
+  toString() {
+    return `[${this.x}, ${this.y}]`
+  }
+
   static one() {
     return new Vec2(1, 1);
   }
