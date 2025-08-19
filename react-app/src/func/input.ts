@@ -1,7 +1,4 @@
-import {
-  getTypedElementsByClass as getTypedElementByClass,
-  sleep,
-} from "./utils";
+import { sleep } from "./utils";
 import { createScopedLog, LogSeverity } from "./logging";
 
 const log = createScopedLog("Input");
@@ -38,7 +35,7 @@ export class UserInput {
     const keyboardEvent = event as KeyboardEvent;
     log(`Key down: ${keyboardEvent.code} `, LogSeverity.VERBOSE);
   }
-  
+
   handleKeyUp(event: Event) {
     const keyboardEvent = event as KeyboardEvent;
     log(`Key up: ${keyboardEvent.code} `, LogSeverity.VERBOSE);

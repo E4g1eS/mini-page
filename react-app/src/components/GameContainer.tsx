@@ -20,37 +20,38 @@ const USER_INPUT_CLASS = "GameContainer";
 export function GameContainer() {
   const [peer, setPeer] = React.useState<PeerType>(null);
 
-  let game: Game | null = null;
+  const gameRef: React.RefObject<Game | null> = React.useRef(null);
+
   React.useEffect(() => {
     if (peer) {
-      game = new Game(
+      gameRef.current = new Game(
         new PongScene(peer),
         new PongRenderer(),
         new UserInput(USER_INPUT_CLASS)
       );
-      game.startGameLoop().catch((error) => {
+      gameRef.current.startGameLoop().catch((error) => {
         log(`Game loop thrown: ${error}`, LogSeverity.WARNING);
       });
     }
     return () => {
-      if (game) game.stopGameLoop();
+      if (gameRef.current) gameRef.current.stopGameLoop();
     };
   });
 
   return (
     <div className="GameContainer" tabIndex={0}>
       <ConnectionContext value={{ peer, setPeer }}>
-        <GameContext value={game}>
+        <GameContext value={gameRef.current}>
           <Connection />
           <GameCanvas />
         </GameContext>
         <input
           type="button"
+          value="Stop game"
           onClick={(event) => {
-            if (game) game.stopGameLoop();
+            if (gameRef.current) gameRef.current.stopGameLoop();
           }}
         />
-        Game stopped
       </ConnectionContext>
     </div>
   );
