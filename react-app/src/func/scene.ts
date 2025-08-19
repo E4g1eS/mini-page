@@ -24,7 +24,7 @@ class Player {
 class Ball {
   position = new QM.Vec2(0.5, 0.5);
   /** Per second */
-  speed = new QM.Vec2(0.01, 0.005);
+  speed = new QM.Vec2(0.5, 0.3);
 }
 
 /** Is kind of a "Scene", probably should be called that in the future. */
@@ -50,7 +50,15 @@ export class PongScene implements Scene {
   }
 
   update() {
-    const potentialPosition = QM.Vec2.plus(this.ball.position, this.ball.speed);
+    const currentTime = performance.now();
+    const delta = currentTime - this.lastUpdateTime;
+    this.deltaUpdate(delta / 1000);
+    this.lastUpdateTime = currentTime;
+  }
+
+  /** Time delta (in seconds) update */
+  deltaUpdate(delta: number) {
+    const potentialPosition = QM.Vec2.plus(this.ball.position, QM.Vec2.scale(this.ball.speed, delta));
 
     const leftPaddle = 0.5 - this.DISTANCE_BETWEEN_PLAYERS / 2;
     const rightPaddle = 0.5 + this.DISTANCE_BETWEEN_PLAYERS / 2;
@@ -81,6 +89,6 @@ export class PongScene implements Scene {
     if (potentialPosition.y < 0 || potentialPosition.y > 1)
       this.ball.speed = new QM.Vec2(this.ball.speed.x, -this.ball.speed.y);
 
-    this.ball.position = QM.Vec2.plus(this.ball.position, this.ball.speed);
+    this.ball.position = QM.Vec2.plus(this.ball.position, QM.Vec2.scale(this.ball.speed, delta));
   }
 }
